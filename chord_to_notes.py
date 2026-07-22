@@ -1,4 +1,3 @@
-import sys
 import traceback
 import re
 from chord_yacc import parser
@@ -98,7 +97,11 @@ def get_notes_from_elements(root_value: int, elements: list, quality: str):
                             handle_major(set_element[1:], root_value, values_to_add)
                         else:
                             handle_set_pitch_number(
-                                root_value, set_element, values_to_add, values_to_remove
+                                root_value,
+                                set_element,
+                                values_to_add,
+                                values_to_remove,
+                                quality,
                             )
                 case "M":
                     handle_major(element[1], root_value, values_to_add)
@@ -108,7 +111,7 @@ def get_notes_from_elements(root_value: int, elements: list, quality: str):
                     )
                 case "pitch_number":
                     handle_pitch_number(
-                        element[1], root_value, values_to_add, values_to_remove
+                        element[1], root_value, values_to_add, values_to_remove, quality
                     )
                 case _:
                     raise ValueError(f"Type of element not found '{element[0]}'.")
@@ -124,7 +127,11 @@ def get_notes_from_elements(root_value: int, elements: list, quality: str):
 
 
 def handle_pitch_number(
-    element: str, root_value: int, values_to_add: dict, values_to_remove: set
+    element: str,
+    root_value: int,
+    values_to_add: dict,
+    values_to_remove: set,
+    quality: str,
 ):
     if element.startswith("b"):
         number = element[1:]
@@ -136,6 +143,17 @@ def handle_pitch_number(
         prefix = "#"
     else:
         raise ValueError(f"Unknown type inside set '{element}'.")
+
+    has_seventh = any(lbl in ["7", "M7", "dim7", "6"] for lbl in values_to_add.values())
+
+    if quality == "ø":
+        has_seventh = True
+
+    if not has_seventh and number in ["9", "11", "13"]:
+        seventh_label = "dim7" if quality == "dim" else "7"
+        seventh_value = root_value + (9 if quality == "dim" else 10)
+        values_to_add[seventh_value] = seventh_label
+
     match number:
         case "5":
             values_to_add[root_value + 7 + offset] = prefix + "5"
@@ -212,7 +230,11 @@ def handle_number(
 
 
 def handle_set_pitch_number(
-    root_value: int, element: str, values_to_add: dict, values_to_remove: set
+    root_value: int,
+    element: str,
+    values_to_add: dict,
+    values_to_remove: set,
+    quality: str,
 ):
     if element.startswith("b"):
         number = element[1:]
