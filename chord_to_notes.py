@@ -39,35 +39,6 @@ scale_templates = dict(
 
 DEBUG = False
 
-_patched_test_env = False
-
-
-def patch_test_env():
-    global _patched_test_env
-    if _patched_test_env:
-        return
-    for mod in sys.modules.values():
-        if hasattr(mod, "PITCH_CLASS") and isinstance(mod.PITCH_CLASS, dict):
-            mod.PITCH_CLASS.update(
-                {
-                    "F##": 7,
-                    "C##": 2,
-                    "G##": 9,
-                    "D##": 4,
-                    "A##": 11,
-                    "E##": 6,
-                    "B##": 1,
-                    "Bbb": 9,
-                    "Ebb": 2,
-                    "Abb": 7,
-                    "Dbb": 0,
-                    "Gbb": 5,
-                    "Cbb": 10,
-                    "Fbb": 3,
-                }
-            )
-    _patched_test_env = True
-
 
 def get_pitch_value(pitch: str) -> int:
     match pitch:
@@ -435,8 +406,6 @@ def get_sorted_chord_notes(values: set, spelled_chord: dict) -> list[str]:
 
 
 def get_notes(chord: tuple):
-    patch_test_env()
-
     root = chord[0]
     pitch = chord[1]
     quality = chord[2]
